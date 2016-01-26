@@ -1,0 +1,12 @@
+/vendor
+/node_modules
+Homestead.yaml
+Homestead.json
+.env
+*.swp
+
+# ignore eclips project file
+.buildpath
+
+# ignore phpstorm project file
+/.idea
