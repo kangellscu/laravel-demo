@@ -54,6 +54,37 @@ final class ExceptionCode
      */
      const USER_UNAUTHORIZED = 10102;
 
+     /**
+      * Code for operation password unmatched
+      *
+      * @var int
+      */
+    const USER_OPERATION_PASSWORD_UNMATCH = 10103;
+
+    /**
+     * Code for user aready exists
+     *
+     * @var int
+     */
+    const USER_EXISTS = 10104;
+
+    /**
+     * Code for user not exists
+     *
+     * @var int
+     */
+    const USER_NOT_EXISTS = 10105;
+
+    //============================
+    //          HTTPRequest
+    //============================
+    /**
+     * Code for bad response
+     *
+     * @var int
+     */
+    const HTTP_REQUEST_BAD_RESPONSE = 10301;
+
     /*********** Internal error *************
     // Internal error code include:
      *      network error
