@@ -4,6 +4,12 @@ namespace intg\App;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use org\bovigo\vfs\vfsStream;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Exception\RequestException;
 
 class TestCase extends BaseTestCase
 {
@@ -40,6 +46,10 @@ class TestCase extends BaseTestCase
     {
         if (starts_with($name, 'ajax')) {
             return $this->handleAjaxRequest(substr($name, 4), $arguments);
+        }
+
+        if (starts_with($name, 'json')) {
+            return $this->handleJsonRequest(substr($name, 4), $arguments);
         }
 
         return parent::__call($name, $arguments);
@@ -91,6 +101,45 @@ class TestCase extends BaseTestCase
         // mixin ajax request header
         $arguments[5] = array_merge($arguments[5], [
             'HTTP_X-REQUESTED-WITH' => 'XMLHttpRequest'
+        ]);
+
+        call_user_func_array([$this, $callSecure ? 'callSecure' : 'call'], $arguments);
+
+        return $this;
+    }
+
+    private function handleJsonRequest($method, $arguments)
+    {
+        $method = strtoupper($method);  // to make $method case-insensitive, uppercase it
+        $callSecure = $method == 'CALLSECURE'; // are we dealing with 'https' or 'http'
+
+        // prepend $method to $arguments if $method is HTTP verbs
+        if (!in_array($method, ['CALL', 'CALLSECURE'])) {
+            if (starts_with($method, 'SECURE')) {
+                $method = substr($method, 6);
+                $callSecure = true;
+            }
+            array_unshift($arguments, $method);
+        }
+
+        // we're going to take advantage of \Illuminate\Foundation\Testing\CrawlTrait::call()
+        // to make it ajax-like, we'll stuff a header into $server (the 6th argument of call() method)
+        // One thing to note: the header is not HTTP but Symfony (the supporting of Laravel) specific.
+        // More precisely, we should add the following header to make it ajax-like (note the heading
+        // HTTP_):
+        //
+        //  'HTTP_X-REQUESTED-WITH' => 'XMLHttpRequest'
+        //
+
+        $arguments = array_pad($arguments, 7, []); // give default values to argument
+        // special handling for the last $content, since it's not an array.
+        // if it is, it's the side effect of array_pad() method above, and
+        // in that case, we set it as null (which is its default value).
+        is_array($arguments[6]) && ($arguments[6] = null);
+
+        // mixin ajax request header
+        $arguments[5] = array_merge($arguments[5], [
+            'HTTP_ACCEPT'    => 'application/json',
         ]);
 
         call_user_func_array([$this, $callSecure ? 'callSecure' : 'call'], $arguments);
@@ -151,5 +200,31 @@ class TestCase extends BaseTestCase
                 }
                 return call_user_func_array($callback, func_get_args());
             }));
+    }
+
+    /**
+     * mock http client and response
+     * 模拟http响应
+     *
+     * Usage: $this->mockHttpClient(json_encode([
+     *          'code' => 0,
+     *          'data' => [],
+     *          'message'   => 'ok',
+     *          ]))
+     *
+     * @param string $respBody 模拟响应body
+     * @param int $respCode 模拟响应http status
+     * @param array $respHeader 模拟响应http header
+     */
+    protected final function mockHttpClient(
+        $respBody,
+        $respCode = 200,
+        array $respHeader = []
+    ) {
+        $mock = new MockHandler();
+        $mock->append(new Response($respCode, $respHeader, $respBody));
+
+        $handler = HandlerStack::create($mock);
+        $this->app[\GuzzleHttp\ClientInterface::class] = new Client(['handler' => $handler]);
     }
 }
