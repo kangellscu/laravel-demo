@@ -1,5 +1,5 @@
 <?php
-namespace ZdpFinance\Providers;
+namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
