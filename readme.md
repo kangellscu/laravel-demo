@@ -19,3 +19,6 @@ This demo projects shiped with some features, as below:
 * MoneyUnitConvertUtil
 > util for money unit from fen to yuan, or from yuan to fen
 
+### 支持wechat
+[laravel vendor](https://github.com/overtrue/laravel-wechat)
+[easywechat official site](https://easywechat.org/)
