@@ -141,6 +141,7 @@ return [
         /*
          * Application Service Providers...
          */
+        Overtrue\LaravelWechat\ServiceProvider::class,
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
         App\Providers\EventServiceProvider::class,
